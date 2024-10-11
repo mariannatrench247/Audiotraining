@@ -1,0 +1,35 @@
+#using hugging face audio datasets & Wav2Vec2 model
+
+from datasets import load_dataset, Audio
+dataset = load_dataset("PolyAI/minds14", "en-US", split="train")
+
+from transformers import AutoModelForAudioClassification, AutoFeatureExtractor
+model = AutoModelForAudioClassification.from_pretrained("facebook/wav2vec2-base")
+feature_extractor = AutoFeatureExtractor.from_pretrained("facebook/wav2vec2-base")
+
+dataset = dataset.cast_column("audio", Audio(sampling_rate=16000))
+dataset[0]["audio"]
+{'array': array([ 2.3443763e-05,  2.1729663e-04,  2.2145823e-04, ...,
+         3.8356509e-05, -7.3497440e-06, -2.1754686e-05], dtype=float32),
+ 'path': '/root/.cache/huggingface/datasets/downloads/extracted/f14948e0e84be638dd7943ac36518a4cf3324e8b7aa331c5ab11541518e9368c/en-US~JOINT_ACCOUNT/602ba55abb1e6d0fbce92065.wav',
+ 'sampling_rate': 16000}
+
+def preprocess_function(examples):
+    audio_arrays = [x["array"] for x in examples["audio"]]
+    inputs = feature_extractor(
+        audio_arrays,
+        sampling_rate=16000,
+        padding=True,
+        max_length=100000,
+        truncation=True,
+    )
+    return inputs
+
+dataset = dataset.map(preprocess_function, batched=True)
+
+dataset = dataset.rename_column("intent_class", "labels")
+#Pytorch
+from torch.utils.data import DataLoader
+
+dataset.set_format(type="torch", columns=["input_values", "labels"])
+dataloader = DataLoader(dataset, batch_size=4)
