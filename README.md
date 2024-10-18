@@ -1,4 +1,4 @@
-# Audiotraining
+# Audio Training - Text to Speech using Variational Autoencoders 
 
 Text to Speech Models from data extracted from my data pipelines. The purpose of this project is to create a text to speech model with a GUI that allows users to copy&paste or drag files of text, which can then be converted into speech and downloaded for personal use. 
 
